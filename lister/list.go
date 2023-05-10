@@ -10,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-func ListPods(ns string) {
+func Listing(ns string) {
 	kubeconfig := common.GetKubeconfig()
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -29,19 +29,6 @@ func ListPods(ns string) {
 		fmt.Println(p.Namespace, " | ", p.Name)
 	}
 
-}
-
-func ListDeployments(ns string) {
-	kubeconfig := common.GetKubeconfig()
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	common.CheckErrorAndFatal(err)
-
-	clientSet, err := kubernetes.NewForConfig(config)
-	common.CheckErrorAndFatal(err)
-
-	ctx := context.Background()
-
 	fmt.Println("==================== Deployments ")
 	deploys, err := clientSet.AppsV1().Deployments(ns).List(ctx, v1.ListOptions{})
 	common.CheckErrorAndFatal(err)
@@ -49,4 +36,5 @@ func ListDeployments(ns string) {
 	for _, d := range deploys.Items {
 		fmt.Println(d.Namespace, " | ", d.Name)
 	}
+
 }
