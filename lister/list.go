@@ -4,23 +4,16 @@ import (
 	"context"
 	"customize-k8s/common"
 	"fmt"
+	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/tools/cache"
 )
 
 func Listing(ns string) {
-	kubeconfig := common.GetKubeconfig()
-
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if common.IsError(err) {
-		config, err = rest.InClusterConfig()
-		common.CheckErrorAndFatal(err)
-	}
-
-	clientSet, err := kubernetes.NewForConfig(config)
+	clientSet, err := common.GetClientSet()
 	common.CheckErrorAndFatal(err)
 
 	ctx := context.Background()
@@ -40,5 +33,30 @@ func Listing(ns string) {
 	for _, d := range deploys.Items {
 		fmt.Println(d.Namespace, " | ", d.Name)
 	}
+
+	// Informer
+
+	informerFactory := informers.NewSharedInformerFactory(clientSet, 30*time.Second)
+
+	podInformer := informerFactory.Core().V1().Pods()
+
+	eventHandler := cache.ResourceEventHandlerFuncs{
+		AddFunc: func(newRes interface{}) {
+			fmt.Println("New resource created.")
+		},
+		UpdateFunc: func(oldRes, newRes interface{}) {
+			fmt.Println("Resource Updated.")
+		},
+		DeleteFunc: func(res interface{}) {
+			fmt.Println("Resource deleted.")
+		},
+	}
+	podInformer.Informer().AddEventHandler(eventHandler)
+
+	informerFactory.Start(wait.NeverStop)
+	informerFactory.WaitForCacheSync(wait.NeverStop)
+	pod, err := podInformer.Lister().Pods("default").Get("default")
+
+	fmt.Println(pod)
 
 }

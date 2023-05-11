@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-nginx
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mynginx
+
+  template:
+    metadata:
+      labels:
+        app: mynginx
+
+      annotations:
+        kubernetes.io/change-cause: "New pod"
+    spec:
+      containers:
+      - name: mynginx
+        image: "nginx"
+        imagePullPolicy: Always

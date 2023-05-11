@@ -4,6 +4,10 @@ import (
 	"flag"
 	"log"
 	"os"
+
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 func GetKubeconfig() string {
@@ -11,6 +15,22 @@ func GetKubeconfig() string {
 	CheckErrorAndFatal(err)
 	kubeconfig := flag.String("kubeconfig", homeDir+"/.kube/config", "local profile kubeconfig default location")
 	return *kubeconfig
+}
+
+func GetClientSet() (*kubernetes.Clientset, error) {
+	kubeconfig := GetKubeconfig()
+
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if IsError(err) {
+		config, err = rest.InClusterConfig()
+		if IsError(err) {
+			return nil, err
+		}
+	}
+
+	clientSet, err := kubernetes.NewForConfig(config)
+
+	return clientSet, err
 }
 
 func CheckErrorAndFatal(err error) {
