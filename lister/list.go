@@ -7,6 +7,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -14,7 +15,10 @@ func Listing(ns string) {
 	kubeconfig := common.GetKubeconfig()
 
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	common.CheckErrorAndFatal(err)
+	if common.IsError(err) {
+		config, err = rest.InClusterConfig()
+		common.CheckErrorAndFatal(err)
+	}
 
 	clientSet, err := kubernetes.NewForConfig(config)
 	common.CheckErrorAndFatal(err)

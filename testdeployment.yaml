@@ -1,0 +1,59 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: listerrole
+  namespace: default
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - list
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: listerbinding
+  namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: listerrole
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: default
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customize-k8s
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lister
+
+  template:
+    metadata:
+      labels:
+        app: lister
+
+      annotations:
+        kubernetes.io/change-cause: "New pod"
+    spec:
+      containers:
+      - name: lister
+        image: "prepdigi/customize-k8s:0.1.0"
+        imagePullPolicy: Always

@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	lister.Listing("")
+	lister.Listing("default")
 
 }
